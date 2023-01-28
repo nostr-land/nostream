@@ -33,7 +33,9 @@ export enum EventTags {
   //  Multicast = 'm',
   Delegation = 'delegation',
   Deduplication = 'd',
+  Expiration = 'expiration',
 }
 
 export const EventDelegatorMetadataKey = Symbol('Delegator')
 export const EventDeduplicationMetadataKey = Symbol('Deduplication')
+export const EventExpirationMetadataKey = Symbol('Expiration')

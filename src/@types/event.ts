@@ -1,6 +1,5 @@
-import { EventDeduplicationMetadataKey, EventDelegatorMetadataKey, EventKinds } from '../constants/base'
+import { EventDeduplicationMetadataKey, EventDelegatorMetadataKey, EventExpirationMetadataKey, EventKinds } from '../constants/base'
 import { EventId, Pubkey, Tag } from './base'
-
 
 export interface Event {
   id: EventId
@@ -14,6 +13,10 @@ export interface Event {
 
 export interface DelegatedEvent extends Event {
   [EventDelegatorMetadataKey]?: Pubkey
+}
+
+export interface ExpiredEvent extends Event {
+  [EventExpirationMetadataKey]?: number
 }
 
 export interface ParameterizedReplaceableEvent extends Event {

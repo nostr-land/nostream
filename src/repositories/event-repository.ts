@@ -180,6 +180,7 @@ export class EventRepository implements IEventRepository {
         pipe(prop(EventDelegatorMetadataKey as any), toBuffer),
         always(null),
       ),
+      
     })(event)
 
     return this.masterDbClient('events')
