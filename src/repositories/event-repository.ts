@@ -30,7 +30,7 @@ import {
 
 import { DatabaseClient, EventId } from '../@types/base'
 import { DBEvent, Event } from '../@types/event'
-import { EventDeduplicationMetadataKey, EventDelegatorMetadataKey } from '../constants/base'
+import { EventDeduplicationMetadataKey, EventDelegatorMetadataKey, EventExpirationTimeMetadataKey } from '../constants/base'
 import { IEventRepository, IQueryResult } from '../@types/repositories'
 import { toBuffer, toJSON } from '../utils/transform'
 import { createLogger } from '../factories/logger-factory'
@@ -180,6 +180,11 @@ export class EventRepository implements IEventRepository {
         pipe(prop(EventDelegatorMetadataKey as any), toBuffer),
         always(null),
       ),
+      expires_at: ifElse(
+        propSatisfies(is(Number), EventExpirationTimeMetadataKey),
+        pipe(prop(EventExpirationTimeMetadataKey as any), toBuffer),
+        always(null),
+      ),
       
     })(event)
 
@@ -212,6 +217,11 @@ export class EventRepository implements IEventRepository {
         propSatisfies(isNil, EventDeduplicationMetadataKey),
         pipe(paths([['pubkey'], ['kind']]), toJSON),
         pipe(prop(EventDeduplicationMetadataKey as any), toJSON),
+      ),
+      expires_at: ifElse(
+        propSatisfies(is(Number), EventExpirationTimeMetadataKey),
+        pipe(prop(EventExpirationTimeMetadataKey as any), toBuffer),
+        always(null),
       ),
     })(event)
 

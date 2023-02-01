@@ -1,9 +1,10 @@
+import { Event, ExpiringEvent } from '../@types/event'
 import { EventKindsRange, EventRateLimit, ISettings } from '../@types/settings'
-import { getEventProofOfWork, getPubkeyProofOfWork, isEventIdValid, isEventSignatureValid } from '../utils/event'
+import { getEventExpiration, getEventProofOfWork, getPubkeyProofOfWork, isEventIdValid, isEventSignatureValid, isExpiredEvent } from '../utils/event'
 import { IEventStrategy, IMessageHandler } from '../@types/message-handlers'
 import { createCommandResult } from '../utils/messages'
 import { createLogger } from '../factories/logger-factory'
-import { Event } from '../@types/event'
+import { EventExpirationTimeMetadataKey } from '../constants/base'
 import { EventKinds } from '../constants/base'
 import { Factory } from '../@types/base'
 import { IncomingEventMessage } from '../@types/messages'
@@ -22,7 +23,7 @@ export class EventMessageHandler implements IMessageHandler {
   ) {}
 
   public async handleMessage(message: IncomingEventMessage): Promise<void> {
-    const [, event] = message
+    let [, event] = message
 
     let reason = await this.isEventValid(event)
     if (reason) {
@@ -30,6 +31,14 @@ export class EventMessageHandler implements IMessageHandler {
       this.webSocket.emit(WebSocketAdapterEvent.Message, createCommandResult(event.id, false, reason))
       return
     }
+
+    event = this.addExpirationMetadata(event)
+
+    if (isExpiredEvent(event)) {
+      debug('event %s rejected: expired')
+      this.webSocket.emit(WebSocketAdapterEvent.Message, createCommandResult(event.id, false, 'event is expired'))
+      return
+   }
 
     if (await this.isRateLimited(event)) {
       debug('event %s rejected: rate-limited')
@@ -167,5 +176,18 @@ export class EventMessageHandler implements IMessageHandler {
     debug('rate limit check %s: %o', event.pubkey, hits)
 
     return hits.some((active) => active)
+  }
+
+  protected addExpirationMetadata(event: Event): Event | ExpiringEvent {
+    const eventExpiration = getEventExpiration(event)
+    if (eventExpiration) {
+        const expiredEvent: any = {
+          ...event,
+          [EventExpirationTimeMetadataKey]: eventExpiration,
+        }
+        return expiredEvent
+    } else {
+      return event
+    }
   }
 }

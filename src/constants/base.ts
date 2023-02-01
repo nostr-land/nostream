@@ -38,4 +38,4 @@ export enum EventTags {
 
 export const EventDelegatorMetadataKey = Symbol('Delegator')
 export const EventDeduplicationMetadataKey = Symbol('Deduplication')
-export const EventExpirationMetadataKey = Symbol('Expiration')
+export const EventExpirationTimeMetadataKey = Symbol('Expiration')
